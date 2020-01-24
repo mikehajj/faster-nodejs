@@ -37,15 +37,19 @@ class MSDeployer {
 		}
 		
 		//check if GIT_PASSWORD is provided
-		if ( !process.env.MS_GIT_PASSWORD || process.env.MS_GIT_PASSWORD.trim() === '' ) {
-			let errString = `Error: Unable to proceed!\n\n` +
-				`Expecting an environment variable 'GIT_PASSWORD' to be provided.\n` +
-				`Please check README.md file for further instructions.`;
-			throw new Error( errString );
+		if ( process.env.MS_GIT_PASSWORD ) {
+			if(process.env.MS_GIT_PASSWORD.trim() === ''){
+				let errString = `Error: Unable to proceed!\n\n` +
+					`Expecting an environment variable 'GIT_PASSWORD' to be filled when provided.\n` +
+					`Please check README.md file for further instructions.`;
+				throw new Error( errString );
+			}
+			else{
+				this.git_info.password = fs.readFileSync( process.env.MS_GIT_PASSWORD, { 'encoding': 'utf8' } );
+			}
 		}
 		
 		this.git_info.username = process.env.MS_GIT_USERNAME;
-		this.git_info.password = fs.readFileSync(process.env.MS_GIT_PASSWORD, {'encoding': 'utf8'});
 		this.git_info.repo = process.env.MS_GIT_REPO;
 		
 		if ( process.env.MS_GIT_BRANCH && process.env.MS_GIT_BRANCH.trim() !== '' ) {
@@ -113,7 +117,13 @@ class MSDeployer {
 	clone( callback ) {
 		console.log( "-> Cloning Source Code from Github ..." );
 		let clone_arguments = [ 'clone' ];
-		clone_arguments.push( `https://${ this.git_info.password }@github.com/${ this.git_info.username }/${ this.git_info.repo }.git` );
+		
+		if ( this.git_info.password ) {
+			clone_arguments.push( `https://${ this.git_info.password }@github.com/${ this.git_info.username }/${ this.git_info.repo }.git` );
+		}
+		else {
+			clone_arguments.push( `https://github.com/${ this.git_info.username }/${ this.git_info.repo }.git` );
+		}
 		
 		if ( this.git_info.branch ) {
 			clone_arguments.push( "--branch" );
@@ -200,16 +210,16 @@ msDeployer.clone( ( error ) => {
 			console.log( error );
 			process.exit( -1 );
 		}
-
+		
 		//start the microservice
 		msDeployer.launch( ( error ) => {
 			if ( error ) {
 				console.log( error );
 				process.exit( -1 );
 			}
-
+			
 		} );
-
+		
 	} );
-
+	
 } );

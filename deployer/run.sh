@@ -4,9 +4,6 @@ echo "###########################################################"
 echo "# Initializing Deployer ..."
 echo "###########################################################"
 
-echo "-> Setting NODE_ENV to production ...."
-export NODE_ENV=production
-
 echo "-> Creating new Logs Directory ...."
 mkdir -p /opt/logs/
 echo "-> Logs Directory created at /opt/logs/ ...."
